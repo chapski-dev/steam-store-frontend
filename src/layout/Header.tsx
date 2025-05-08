@@ -1,8 +1,23 @@
+import { NavLink } from "react-router";
+import CartIcon from '../assets/cart.svg'
+import Logo from '../assets/png/logo.png'
+import { useCartStore } from "../store/cart";
+import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from 'wagmi'
+import * as React from 'react'
+import { Connector, useConnect } from 'wagmi'
+import { useUserStore } from "../store/user";
+import HeartIcon from "../assets/heart.svg";
+import HeartFilledIcon from "../assets/heart-filled.svg";
+import { useFavoriteStore } from "../store/favorite";
+import UserDropdown from "../components/UserDropdown";
 
 
-export const Header = ({ cartItems }) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  // const cartItems = JSON.parse(localStorage.getItem('cartItems') || 'null');
+export const Header = () => {
+  const { user } = useUserStore();
+  const { items } = useCartStore();
+  const { favorites } = useFavoriteStore();
+
+  const total = items.reduce((sum, item) => sum + item.quantity, 0);
 
 
   const handleLogin = () => {
@@ -10,28 +25,98 @@ export const Header = ({ cartItems }) => {
   };
 
   return (
-    <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <a href="/" className="text-xl font-bold">Steam Marketplace</a>
-      <nav className="flex items-center space-x-4">
+    <header className="bg-white shadow px-4 py-3 flex justify-between items-center">
+      <a href="/">
+        <img src={Logo} className='w-26' />
+      </a>
+      <nav className="space-x-6">
+        <NavLink to="/market">Market</NavLink>
+        <NavLink to="/crypto">Crypto</NavLink>
+
+        {user && <NavLink children="Инвентарь" to='/inventory' />}
+      </nav>
+      <div className="flex gap-3">
+        {/* <ConnectWallet /> */}
+
         {user ? (
-          <>
-          <img src={user.avatar} />
-          <span>{user.name || 'Пользователь'}</span>
-          </>
+          <UserDropdown />
         ) : (
           <button onClick={handleLogin} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Войти через Steam
           </button>
         )}
-        <a href="/cart" className="relative bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Корзина
-          {cartItems.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-              {cartItems.length}
+
+        <a href="/cart" className="relative py-2 px-4 rounded">
+          <img src={CartIcon} className='w-8' />
+          {total > 0 && (
+            <span className="absolute -top-0 -right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+              {total}
             </span>
           )}
         </a>
-      </nav>
+        <a href="/favorite" className="relative py-2 px-4 rounded">
+          <img src={favorites.length ? HeartFilledIcon : HeartIcon} className='w-8' />
+        </a>
+      </div>
     </header>
   );
 };
+
+function ConnectWallet() {
+  const { isConnected } = useAccount()
+  console.log('isConnected', isConnected);
+
+  if (isConnected) return <Account />
+  return <WalletOptions />
+}
+
+export function WalletOptions() {
+  const { connectors, connect } = useConnect()
+
+  return connectors.map((connector) => (
+    <WalletOption
+      key={connector.uid}
+      connector={connector}
+      onClick={() => connect({ connector })}
+    />
+  ))
+}
+
+function WalletOption({
+  connector,
+  onClick,
+}: {
+  connector: Connector
+  onClick: () => void
+}) {
+  const [ready, setReady] = React.useState(false)
+
+  React.useEffect(() => {
+    ; (async () => {
+      const provider = await connector.getProvider()
+      setReady(!!provider)
+    })()
+  }, [connector])
+
+  return (
+    <button disabled={!ready} onClick={onClick}>
+      {connector.name}
+    </button>
+  )
+}
+
+
+export function Account() {
+  const { address } = useAccount()
+  const { disconnect } = useDisconnect()
+  const { data: ensName } = useEnsName({ address })
+  const { data: ensAvatar } = useEnsAvatar({ name: ensName! })
+
+  return (
+    <div>
+      {ensAvatar && <img alt="ENS Avatar" src={ensAvatar} />}
+      {address && <div>{ensName ? `${ensName} (${address})` : address}</div>}
+      <button onClick={() => disconnect()}>Disconnect</button>
+    </div>
+  )
+}

@@ -1,13 +1,15 @@
+import { useCartStore } from "../store/cart";
 
 
 
-export const Home = ({addToCart}) => {
+export const Home = () => {
   const skins = [
-    { id: 1, name: 'AK-47 | Redline', price: 25 },
-    { id: 2, name: 'M4A4 | Howl', price: 150 },
-    { id: 3, name: 'AWP | Dragon Lore', price: 2000 },
+    { id: '1', name: 'AK-47 | Redline', price: 25, image: 'https://community.cloudflare.steamstatic.com/economy/image/class/570/1723133640/256x128' },
+    { id: '2', name: 'M4A4 | Howl', price: 150, image: 'https://community.cloudflare.steamstatic.com/economy/image/class/570/644964380/256x128' },
+    { id: '3', name: 'AWP | Dragon Lore', price: 2000, image: 'https://community.cloudflare.steamstatic.com/economy/image/class/570/2460908135/256x128' },
   ];
 
+  const addToCart = useCartStore(state => state.addItem);
 
   return (
     <div className="p-4">
@@ -16,6 +18,7 @@ export const Home = ({addToCart}) => {
         {skins.map(skin => (
           <div key={skin.id} className="border p-4 rounded shadow">
             <h3 className="text-lg font-semibold">{skin.name}</h3>
+            <img src={skin.image} />
             <p>Цена: ${skin.price}</p>
             <button
               onClick={() => addToCart(skin)}

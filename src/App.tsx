@@ -2,42 +2,27 @@ import './App.css'
 import { Route, Routes } from 'react-router'
 import { Home } from './pages/Home'
 import { About } from './pages/About'
-import {  useEffect, useState } from 'react';
 import { Auth } from './pages/Auth';
-import { Header } from './layout/Header';
+import { Inventory } from './pages/Inventory';
+import Market from './pages/Market';
+import { Cart } from './pages/Cart';
+import { MainLayout } from './layout/MainLayout';
+import { FavoritePage } from './pages/Favorite';
 
 function App() {
-  const [cartItems, setCartItems] = useState<any[]>([]);
-
-  const [path, setPath] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const handleLocationChange = () => setPath(window.location.pathname);
-    window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
-  }, []);
-
-  console.log("path", path);
-  
-
-  const addToCart = (skin:any) => {
-    localStorage.setItem('cartItems', skin)
-    setCartItems((state) => [...state, skin])
-  }
-
-  
-
 
   return (
-    <>
-    <Header cartItems={cartItems} />
-    <Routes>
-      <Route index element={<Home addToCart={addToCart} />} />
-      <Route path="about" element={<About />} />
-      <Route path="auth" element={<Auth />} />
+    <MainLayout>
+      <Routes>
+        <Route index element={<Home />} />
+        <Route path="about" element={<About />} />
+        <Route path="auth" element={<Auth />} />
+        <Route path="inventory" element={<Inventory />} />
+        <Route path='market' element={<Market />} />
+        <Route path='cart' element={<Cart />} />
+        <Route path='favorite' element={<FavoritePage />} />
 
-
-      {/* <Route element={<AuthLayout />}>
+        {/* <Route element={<AuthLayout />}>
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
       </Route>
@@ -47,8 +32,8 @@ function App() {
         <Route path=":city" element={<City />} />
         <Route path="trending" element={<Trending />} />
       </Route> */}
-    </Routes>
-    </>
+      </Routes>
+    </MainLayout>
   )
 }
 
